@@ -1,0 +1,117 @@
+__name__="__main__"
+ 
+import sys, os, traceback
+import subprocess
+import re
+ 
+# Switch this to 0 when in production mode.
+debugMode = 0
+
+def main(args):
+    try:  
+        
+        attributeMap = parseInput(args)
+        
+        # This is the lookup parameter key.
+        senderMail = attributeMap["sender-email"]
+        email_key = "@"
+        
+        ## If it contains an email address do not run this script
+        if email_key in senderMail:
+            return
+        ## Replace DOMAIN\user with DOMAIN:user and split based on :
+        else:
+            ReplacehttpUsername = senderMail.replace("\\", ":")
+            SplithttpUsername = ReplacehttpUsername.split(":")
+            httpUsername = SplithttpUsername[1]
+            print ("HttpUserName="+httpUsername)
+        return
+ 
+    except:
+        error()    
+        print ("something went wrong!")
+        return "something went wrong!"
+ 
+def parseInput(args):
+     
+    # Input data is a list of key value pairs seperated by carraige return
+    # Create a python dictionary to create the attribute map    
+    attributeMap = {}
+    delimiter = "="
+    for item in args:
+        if delimiter in item:
+            tuple = item.split(delimiter)          
+            attributeMap[tuple[0]] = tuple[1] 
+    return attributeMap
+ 
+def error():
+    # "SCRIPT PROCESSING ERROR"
+    if(debugMode):
+        print ("Script Processing Error")
+        traceback.print_exc(file=sys.stdout)
+    return ""
+ 
+#-----------------------------------------------------------------
+# Entry Point
+#-----------------------------------------------------------------
+
+Option Explicit
+
+On Error Resume Next
+
+Dim i
+Dim objDict
+Dim myArray
+Dim dictResults
+
+Set objDict     = CreateObject("Scripting.Dictionary")
+Set dictResults = CreateObject("Scripting.Dictionary")
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Get Arguments
+For i = 0 to Wscript.Arguments.Count - 1
+	myArray = split(Wscript.Arguments(i),"=",-1,1)
+	objDict.Add myArray(0),myArray(1)
+Next
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+If objDict.Exists("sender-email") Then 
+	If objDict.Item("sender-email") <> "" Then
+	'Sample input data
+	'WinNT://DOMAIN/username
+		dictResults.Add "UserName", Mid(objDict.Item("sender-email"),InstrRev(objDict.Item("sender-email"),"/")+1)
+	Else
+		'oOutputFile.WriteLine "sender-email is empty"
+	End If
+Else
+	'oOutputFile.WriteLine("sender-email item does NOT exist")
+End If
+
+If dictResults.Count > 0 Then
+	Call DisplayResults()
+End If
+
+WScript.Quit(0)
+	
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Sub DisplayResults()
+
+Dim myArray
+Dim i
+Dim strValue
+
+	myArray = dictResults.Keys  		' Get the keys.
+	For i = 0 To dictResults.Count - 1	' Iterate the array.
+		strValue = dictResults.item(myArray(i))
+		'strValue = "" & strValue & ""
+		wscript.echo myArray(i) & "=" & strValue
+	Next
+	
+End Sub
+ 
+if __name__ == "__main__":
+    
+      if(len(sys.argv) == 0):
+          error()
+      else:
+          main(sys.argv)
